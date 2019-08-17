@@ -20,9 +20,16 @@ module.exports = {
         repository.findById(req.params, (error, result) => {
             if (error) {
                 res.status(500).send(error);
-            }
+            };
 
-            res.send(result[0]);
+            console.log(result);
+
+            if (! result[0] ) {
+                res.status(404).send();                
+            }
+            
+            res.send(result[0]);             
+                            
         });
 
     },
@@ -40,22 +47,31 @@ module.exports = {
     },
 
     update: (req,res) => {
-        const {id} = req.params;
-        const person = req.body;
+        //Atualiza o id do objeto do req.body
+        req.body.id = req.params.id;
 
-        persons[id-1] = person;
+        repository.update(req.body, (error, result) => {
+            if (error) {
+                res.status(500).send(error);
+            }
 
-//        persons.push(); Não precisa.
+            if (result.affectedRows == 0 ) {
+                res.status(404).send();                
+            }
 
-        res.send(person);
+            res.send(result);
+        });
     },
 
     delete: (req,res) => {
-        const {id} = req.params;
+        repository.delete(req.params, (error, result) => {
+            if (error) {
+                res.status(500).send(error);
+            }
+            
 
-        persons.splice(id-1, 1)
-
-        res.send(204).send();      
+            res.status(204).send();
+        });  
     }
 
 }
