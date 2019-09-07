@@ -1,25 +1,24 @@
 const connection = require('../mysql-connection');
 
-//////////////////////////////////////////////////////////////////////////
-//               AINDA NÃO AJUSTEI O RESTANTE DO ARQUIVO               ///
-//////////////////////////////////////////////////////////////////////////
-
 module.exports = {
     find: (callBack) => {
-        connection.query('select * from pedido', callBack);
+        connection.query('select PEDIDO.*, '+ 
+        'CLIENTE.ID AS CLIENTE_ID, CLIENTE.CODIGO AS CLIENTE_CODIGO, CLIENTE.NOME AS CLIENTE_NOME, CLIENTE.EMAIL AS CLIENTE_EMAIL, '  + 
+        'VENDEDOR.ID AS VENDEDOR_ID, VENDEDOR.CODIGO AS VENDEDOR_CODIGO, VENDEDOR.NOME AS VENDEDOR_NOME, VENDEDOR.EMAIL AS VENDEDOR_EMAIL '  + 
+        'FROM PEDIDO ' + 
+        'LEFT JOIN CLIENTE ON CLIENTE.ID = PEDIDO.CLIENTE_ID ' +
+        'LEFT JOIN VENDEDOR ON VENDEDOR.ID = PEDIDO.VENDEDOR_ID', callBack);
     },
     findById: (params, callBack) => {
-        connection.query('SELECT * FROM pedido WHERE ID = ?', [params.id], callBack);
+
     },
     create: (params, callback) => {
-        connection.query('INSERT INTO CLIENTE (CODIGO,NOME,EMAIL) VALUES(?,?,?)', [params.codigo, params.nome,
-        params.email], callback);           
+         
     },
     update: (params, callback) => {
-        connection.query('UPDATE CLIENTE SET CODIGO = ?, NOME = ?, EMAIL = ? WHERE ID = ?', [params.codigo, params.nome,
-            params.email, params.id], callback);      
+    
     },
-        delete: (params, callBack) => {
-            connection.query('DELETE FROM CLIENTE WHERE ID = ?', [params.id], callBack);
-        },
+    delete: (params, callBack) => {
+
+    },
 }

@@ -1,4 +1,6 @@
 const repository = require('../repository/pedido.repository');
+const itemRepository = require('../repository/itemPedido.repository');
+const moment = require('moment');
 const pedido = [];
 
 //////////////////////////////////////////////////////////////////////////
@@ -11,18 +13,30 @@ module.exports = {
         repository.find((error, result) => {
             if (error) {
                 res.status(500).send(error);
-            }
+            }       
 
-       
             const pedidoes = [];
 
             // Converte de relacional para objeto
             for (item of result) {
                 let pedido = {
+                    id: item.ID,
                     codigo: item.CODIGO,
-                    dtpedido: item.DTPEDIDO,
+                    dtpedido: moment(item.DTPEDIDO).format('YYYY-MM-DD'),
                     observacao: item.OBSERVACAO,
-                    cliente_id: item.CLIENT_ID
+                    cliente: {
+                        id: item.CLIENTE_ID,
+                        codigo: item.CLIENTE_CODIGO,
+                        nome: item.CLIENTE_NOME,
+                        email: item.CLIENTE_EMAIL
+                    },
+                    vendedor: {
+                        id: item.VENDEDOR_ID,
+                        codigo: item.VENDEDOR_CODIGO,
+                        nome: item.VENDEDOR_NOME,
+                        email: item.VENDEDOR_EMAIL
+                    }
+            /// Aqui virá a chado do itemPedido, retornando os itens do pedido (PRetendo implementar isso indo para ctba)              
                 }
                 pedidoes.push(pedido);
             };
@@ -31,7 +45,6 @@ module.exports = {
         });
 
     },
-
     findByID: (req, res) => {
 
         repository.findById(req.params, (error, result) => {
@@ -50,58 +63,20 @@ module.exports = {
                     cliente_id: item.cliente_id
                 }
                 pedidos.push(pedido);
-            };
-
-            res.send(pedidos);
-
-        });
-
-    },
-
-    create: (req, res) => {
-
-        // Converte de objeto para relacional
-        const pedido = {
-            codigo: req.body.codigo,
-            nome: req.body.nome,
-            email: req.body.email
-        }
-
-        repository.create(pedido, (error, result) => {
-            if (error) {
-                res.status(500).send(error);
             }
-
-            res.send(result);
-        });
+            res.send(pedidos);
+        })
+    },
+    create: (req, res) => {
 
     },
 
     update: (req,res) => {
-        //Atualiza o id do objeto do req.body
-        req.body.id = req.params.id;
 
-        repository.update(req.body, (error, result) => {
-            if (error) {
-                res.status(500).send(error);
-            }
-
-            if (result.affectedRows == 0 ) {
-                res.status(404).send();                
-            }
-
-            res.send(result);
-        });
     },
 
     delete: (req, res) => {
-        repository.delete(req.params, (error, result) => {
-            if (error) {
-                res.status(500).send(error);
-            }
 
-            res.status(204).send();
-        });
     }
 
 }
