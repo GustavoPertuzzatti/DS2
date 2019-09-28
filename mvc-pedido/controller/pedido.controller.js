@@ -79,16 +79,16 @@ module.exports = {
         });
 
     },
-    create: (req, res) => {
+    
+    create: (req,res) => { 
         
+        repository.create(req.body, (error, result) => {
+            if (error) {
+                res.status(500).send(error);
+            }
 
-        const pedido = {
-            nome: req.body.nome,
-            estado_id: req.body.estado.id
-        }
-
-
-
+            res.send(result);
+        });
     },
 
     update: (req,res) => {

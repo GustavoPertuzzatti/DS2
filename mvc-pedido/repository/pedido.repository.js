@@ -7,7 +7,7 @@ const query = 'select PEDIDO.*, ' +
     'LEFT JOIN CLIENTE ON CLIENTE.ID = PEDIDO.CLIENTE_ID ' +
     'LEFT JOIN VENDEDOR ON VENDEDOR.ID = PEDIDO.VENDEDOR_ID'
 
-    const queryItens = 'SELECT ip.id as ip_id, ip.qtdade, ip.vlrunit, ' +
+const queryItens = 'SELECT ip.id as ip_id, ip.qtdade, ip.vlrunit, ' +
     'p.id as p_id, p.codigo, p.nome, p.descricao, p.preco ' +
     'FROM itempedido ip ' +
     'INNER JOIN produto p ON p.id = ip.produto_id ' +
@@ -112,40 +112,61 @@ module.exports = {
             });
         });
     },
-    create: (params, callback) => {
+    create: (params) => {
         connection.beginTransaction(error => {
             if (error) {
                 callback(error, false);
-                return;
-            } 
-            
-            //Inserindo o cab do pedido
-            connection.query('INSERT ', [], (error, cabecResult) => {
-                if (error) {
-                    connection.rollback(() => {
-                        callback(error, false);
-                        return;
-                    })
-                }
+                return
+            };
+            //Insere o cabeçalho do pedido   
+            connection.query('INSERT INTO PEDIDO (CODIGO,DTPEDIDO,OBSERVACAO, VENDEDOR_ID, CLIENTE_ID) VALUES(?,?,?,?,?)',
+                [params.codigo, params.dtPedido, params.observacao, params.vendedor_id, params.cliente_id], (error, cabecResult) => {
+                    // Faz roolback, se error no cabecalho
+                    if (error) {
+                        connection.rollback(() => {
+                            callback(error, false);
+                            return;
+                        })
+                    };
 
-                const pedidoID = cabecResult.insertId;
+                    const pedidoId = cabecResult.id;
+                    //Monta query de insercao de itens
+                    let queryAux = '';
+                    let qrInsertItens = 'INSERT INTO ITEMPEDIDO (QUANTIDADE,VLRUNIT,PRODUTO_ID, PEDIDO_ID) VALUES';
+                    //Insere os Itens do Pedido
+                    for (item of params.itens) {
 
-                // Monta  query de itens
-                let qrInsertItens = 'INSERT INTO ITEMPREDIDO (PEDIDO_ID, PRODUTO_ID, QTDADE, VLRUNIT) VALUES ';
+                        queryAux += queryAux == '' ? '' : ',';
+                        queryAux += "(" + pedidoId + "," + item.produto.id + ", " + item.qtdade + ", " + item.vlrunit +
+                            ")";
 
-                let queryAux = '';
+                        qrInsertItens = + queryAux;
+                    }
 
-                // Inserondo os itens do pedido
-                for (item of params.itens) {
-                    queryAux += (queryAux == '' ? '' : ',') + '('+ pedidoID + ', ' + item.produto.id + ', '+ item.produto.qtdade + ',' + item.produto.vlrunit +') '
-                }
-                
-                callback(false, queryAux);
+                    connection.query(qrInsertItens, (error, itensResult) => {
+                        if (error) {
+                            connection.rollback(() => {
+                                callback(error, false);
+                                return;
+                            })
+                        };
 
-            });
+                        connection.commit((error) => {
+                            if (error) {
+                                connection.rollback(() => {
+                                    callback(error, false);
+                                    return;
+                                });
 
-        })
+                                params.id = pedidoId;
+                                callback(false, params);
+                            };
+                        })
+                    });
+                });
+        });
     },
+
     update: (params, callback) => {
 
     },
